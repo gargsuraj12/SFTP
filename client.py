@@ -127,29 +127,21 @@ def downloadFile(conn, myIP, serverIP):
         print("Unable to open file: ", fileName)
         closeConnection(conn)
     try:
+        replyMsg = conn.recv(st.MAX_LEN)
+        replyMsg = replyMsg.decode('ascii')
+        fileSize = int(replyMsg)
+        bytesRead = 0
         i = 1
         while True:
-            replyMsg = conn.recv(st.MAX_LEN)
+            replyMsg = conn.recv(st.MAX_BUFF_SIZE)
             print("Chunk number is: ", i)
-            print("Len of reply message is: ", len(replyMsg))
-            print("Reply message is: ", replyMsg)
-            replyMsgObj = pickle.loads(replyMsg)
-            # Decrypt the Message() -- ToDo
-            if replyMsgObj.header.opcode == st.SERVICEERROR:
-                print("Error occurred while downloading the file from server")
-                filePtr.close()
-                if os.path.exists(filePath):
-                    os.remove(filePath)
-                closeConnection(conn)
-                quit()
-            
-            # else
-            data = replyMsgObj.buffer
+            data = replyMsg
             # print("chunk:",i," is:\n", data)
             i += 1    
             filePtr.write(data)
+            bytesRead += len(data)
             # checking whether the current chunk is the last one
-            if replyMsgObj.status == st.SUCCESSFUL:
+            if bytesRead >= fileSize:    # replyMsgObj.status == st.SUCCESSFUL
                 print("File has been downloaded successfully..")
                 filePtr.close()
                 break

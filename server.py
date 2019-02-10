@@ -3,6 +3,7 @@ import structures as st
 import random
 import socket
 import pickle
+import os
 
 X_B = None
 # Stores the symmetric-key as value with tuple(ip,port) as the dictionary key
@@ -97,30 +98,26 @@ def uploadFile(conn, fileName, myIP, clientIP):
     flag = False
     try:
         i = 1
+        fileStat = os.stat(filePath)
+        fileSize = fileStat.st_size
+        conn.send(str(fileSize).encode('ascii'))
         while True:
             data = filePtr.read(st.MAX_BUFF_SIZE)
-            header = st.Header(st.SERVICEDONE, myIP, clientIP)
-            replyMsgObj = st.Message()
-            replyMsgObj.header = header
-            replyMsgObj.buffer = data
-
-            # Checking if this is the last chunk to be sent
-            if len(data) < st.MAX_BUFF_SIZE:
-                replyMsgObj.status = st.SUCCESSFUL
+            replyMsg = data
+            if data == b'':
                 flag = True
+                # conn.send(''.encode('ascii'))
             else:
-                replyMsgObj.status = st.PROCESSING
-            replyMsg = pickle.dumps(replyMsgObj)
-            print("sending chunk:" ,i, " as:\n", data)
+                conn.send(replyMsg) 
+            print("sending chunk:" ,i) #, " as:\n", data)
             i += 1
-            conn.send(replyMsg)
             if flag:
                 print("This is the last chunk to be sent from server..")
                 break
 
         if flag:
             print("File sent to the client successfully..")
-        return flag    
+        return flag
     except:
         exc_type, exc_value, exc_traceback = sys.exc_info()
         print("Error occurred while sending the file to the client..")
