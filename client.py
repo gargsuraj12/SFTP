@@ -125,7 +125,8 @@ def downloadFile(conn, myIP, serverIP):
         filePtr = open(filePath, "wb")
     except IOError:
         print("Unable to open file: ", fileName)
-        closeConnection(conn)
+        return
+        # closeConnection(conn)
     try:
         replyMsg = conn.recv(st.MAX_LEN)
         replyMsg = replyMsg.decode('ascii')
@@ -153,8 +154,9 @@ def downloadFile(conn, myIP, serverIP):
         print("*** print_tb:")
         traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
         filePtr.close()
-        closeConnection(conn)
-        quit()            
+        return
+        # closeConnection(conn)
+        # quit()            
     # finally:
     #     filePtr.close()
 
@@ -194,10 +196,21 @@ if __name__ == '__main__':
     loginCreate(conn, myIP, serverIP)
 
     authenticate(conn, myIP, serverIP)
-    
-    downloadFile(conn, myIP, myPort)
-    # while True:
-    #     fileName = input("Enter the name of the file to be downloaded: ")
-    closeConnection(conn)
-    conn.close()
+    while True:
+        print("1. Download File")
+        print("2. Exit")
+        try:
+            choice = int(input("Enter your choice: "))
+        except ValueError:
+            print("Format of the input is not correct..")
+            continue
+
+        if choice == 1:
+            downloadFile(conn, myIP, myPort)
+        elif choice == 2:
+            closeConnection(conn)
+            quit()
+        else:
+            print("Invalid choice..")    
+    # conn.close()
     

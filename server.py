@@ -4,6 +4,7 @@ import random
 import socket
 import pickle
 import os
+import threading as th
 
 X_B = None
 # Stores the symmetric-key as value with tuple(ip,port) as the dictionary key
@@ -104,12 +105,14 @@ def uploadFile(conn, fileName, myIP, clientIP):
         while True:
             data = filePtr.read(st.MAX_BUFF_SIZE)
             replyMsg = data
+            
             if data == b'':
                 flag = True
                 # conn.send(''.encode('ascii'))
             else:
                 conn.send(replyMsg) 
-            print("sending chunk:" ,i) #, " as:\n", data)
+                print("sending chunk:" ,i) #, " as:\n", data)
+            
             i += 1
             if flag:
                 print("This is the last chunk to be sent from server..")
@@ -133,7 +136,6 @@ def uploadFile(conn, fileName, myIP, clientIP):
         replyMsg = pickle.dumps(replyMsgObj)
         conn.send(replyMsg)
         return False
-
 
 
 def processClient(conn, clientAddr, myIP):
@@ -231,11 +233,11 @@ if __name__ == '__main__':
     server.listen(st.MAX_CONNECTIONS) 
     print("Server is listening..")
 
-    # while True:
-    conn, clientIP = server.accept() 
-    print("Connection accepted..")
-    
-    processClient(conn, clientIP, myIP)
+    while True:
+        conn, clientAddr = server.accept() 
+        print("Connection accepted for client: ", clientAddr)
+        th.Thread(target=processClient, args=(conn, clientAddr, myIP)).start()
+        # processClient(conn, clientAddr, myIP)
 
     server.close()
         
